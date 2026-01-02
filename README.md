@@ -4,21 +4,22 @@ kids learning game
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Bubbles & Stickers Kids App</title>
+<title>Bubbles & Stickers Prototype</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { margin:0; font-family:Comic Sans MS, Arial; overflow:hidden; background: linear-gradient(to top, #a8edea, #fed6e3);}
+body { margin:0; font-family: Comic Sans MS, Arial; overflow:hidden; background: linear-gradient(to top, #a8edea, #fed6e3);}
 .screen { display:none; width:100%; height:100%; position:absolute; top:0; left:0;}
 .active { display:block;}
-button { font-size:24px; padding:20px; margin:10px; border-radius:15px; border:none; cursor:pointer;}
+button { font-size:22px; padding:15px 25px; margin:10px; border-radius:12px; border:none; cursor:pointer;}
 #home { display:flex; flex-direction:column; align-items:center; justify-content:center; }
-#coins { position:fixed; top:10px; right:10px; background:gold; padding:10px 16px; border-radius:20px; font-size:20px; box-shadow:0 0 8px rgba(0,0,0,.3);}
-.bubble, .balloon { position:absolute; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; user-select:none; text-align:center; }
+#coins { position:fixed; top:10px; right:10px; background:gold; padding:8px 14px; border-radius:20px; font-size:20px; box-shadow:0 0 6px rgba(0,0,0,.3);}
+.bubble, .balloon { position:absolute; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; user-select:none; text-align:center;}
 #stickers { position:fixed; bottom:0; width:100%; background:rgba(255,255,255,.9); display:flex; gap:10px; padding:10px; overflow-x:auto;}
 .sticker { width:60px; height:60px; border-radius:10px; background-size:cover; background-position:center; border:3px solid #ccc;}
 #matchingArea { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:20px; padding:20px;}
-.matchItem { width:100px; height:100px; border:2px dashed #555; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; }
-.matchCard { width:100px; height:100px; display:flex; align-items:center; justify-content:center; font-size:24px; background:#fff; border-radius:10px; cursor:pointer; user-select:none;}
+.matchItem, .matchCard { width:100px; height:100px; display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; border-radius:10px;}
+.matchItem { border:2px dashed #555; background:#fff;}
+.matchCard { background:#fffa; border:2px solid #555; }
 </style>
 </head>
 <body>
@@ -77,16 +78,20 @@ button { font-size:24px; padding:20px; margin:10px; border-radius:15px; border:n
 </div>
 
 <script>
+// GLOBAL VARIABLES
 let coins = 0;
 let unlockedStickers = [];
 let lockedStickers = [
-{name:'🕷️', cost:5}, {name:'🐞', cost:5}, {name:'🦋', cost:10}, {name:'🐝', cost:10},
-{name:'🦖', cost:5}, {name:'🧸', cost:5}, {name:'🐰', cost:5}
+{name:'Spider', cost:5}, {name:'Ladybug', cost:5}, {name:'Butterfly', cost:10}, {name:'Bee', cost:10},
+{name:'Dino', cost:5}, {name:'Bear', cost:5}, {name:'Bunny', cost:5}
 ];
 
 const colors = ['Red','Blue','Yellow','Green','Purple','Orange'];
+const colorHex = ['#FF0000','#0000FF','#FFFF00','#00FF00','#800080','#FFA500'];
 const shapes = ['Circle','Square','Triangle','Star','Heart','Rectangle'];
+let bubbleInterval, balloonInterval;
 
+// NAVIGATION
 function showScreen(id){
 document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
@@ -109,22 +114,29 @@ coins += n;
 document.getElementById('coinCount').textContent = coins;
 }
 
-//// COLORS GAME
+// SPEAK FUNCTION
+function speak(text){
+if('speechSynthesis' in window){
+const msg = new SpeechSynthesisUtterance(text);
+window.speechSynthesis.speak(msg);
+}
+}
+
+// COLORS GAME
 function loadColors(){
 const area = document.getElementById('colorArea');
 area.innerHTML='';
-colors.forEach(c=>{
+colors.forEach((c,i)=>{
 const btn = document.createElement('button');
 btn.textContent=c;
-btn.style.background=c.toLowerCase();
+btn.style.background=colorHex[i];
 btn.style.color='white';
-btn.style.fontWeight='bold';
-btn.onclick=()=>{addCoins(1); speak(c);}
+btn.onclick=()=>{ addCoins(1); speak(c); }
 area.appendChild(btn);
 });
 }
 
-//// SHAPES GAME
+// SHAPES GAME
 function loadShapes(){
 const area = document.getElementById('shapeArea');
 area.innerHTML='';
@@ -133,29 +145,22 @@ const btn = document.createElement('button');
 btn.textContent=s;
 btn.style.background='lightblue';
 btn.style.color='black';
-btn.onclick=()=>{addCoins(1); speak(s);}
+btn.onclick=()=>{ addCoins(1); speak(s); }
 area.appendChild(btn);
 });
 }
 
-//// SPEAK FUNCTION
-function speak(text){
-if('speechSynthesis' in window){
-const msg = new SpeechSynthesisUtterance(text);
-window.speechSynthesis.speak(msg);
-}
-}
-
-//// BUBBLE POP
-let bubbleInterval;
+// BUBBLE POP
 function startBubbles(){
 const container=document.getElementById('bubbles');
 bubbleInterval=setInterval(()=>{
 const b=document.createElement('div');
 b.className='bubble';
-b.textContent=colors[Math.floor(Math.random()*colors.length)];
+const color = colors[Math.floor(Math.random()*colors.length)];
+const hex = colorHex[colors.indexOf(color)];
+b.textContent=color;
 b.style.width=b.style.height='60px';
-b.style.background='hsl('+Math.random()*360+',70%,60%)';
+b.style.background=hex;
 b.style.left=Math.random()*(window.innerWidth-60)+'px';
 b.style.top=window.innerHeight+'px';
 container.appendChild(b);
@@ -167,7 +172,7 @@ if(y<-100){clearInterval(float); b.remove();}
 },16);
 b.onclick=()=>{
 addCoins(1);
-speak(b.textContent);
+speak(color);
 b.remove();
 }
 },1000);
@@ -175,14 +180,14 @@ b.remove();
 
 function stopBubbles(){ clearInterval(bubbleInterval); document.querySelectorAll('.bubble').forEach(b=>b.remove()); }
 
-//// BALLOON POP
-let balloonInterval;
+// BALLOON POP
 function startBalloons(){
 const container=document.getElementById('balloons');
 balloonInterval=setInterval(()=>{
 const b=document.createElement('div');
 b.className='balloon';
-b.textContent=shapes[Math.floor(Math.random()*shapes.length)];
+const shape = shapes[Math.floor(Math.random()*shapes.length)];
+b.textContent=shape;
 b.style.width=b.style.height='60px';
 b.style.background='hsl('+Math.random()*360+',80%,60%)';
 b.style.left=Math.random()*(window.innerWidth-60)+'px';
@@ -196,7 +201,7 @@ if(y<-100){clearInterval(float); b.remove();}
 },16);
 b.onclick=()=>{
 addCoins(1);
-speak(b.textContent);
+speak(shape);
 b.remove();
 }
 },1200);
@@ -204,7 +209,7 @@ b.remove();
 
 function stopBalloons(){ clearInterval(balloonInterval); document.querySelectorAll('.balloon').forEach(b=>b.remove()); }
 
-//// MATCHING GAME
+// MATCHING GAME
 const animalPairs=[{name:'🐘',shape:'Elephant'},{name:'🦁',shape:'Lion'},{name:'🐶',shape:'Dog'}];
 let selectedCard=null;
 function loadMatching(){
@@ -237,7 +242,7 @@ area.appendChild(div);
 });
 }
 
-//// STICKER COLLECTION
+// STICKER COLLECTION
 function showStickers(){
 const panel=document.getElementById('stickers');
 panel.innerHTML='';
@@ -245,7 +250,7 @@ lockedStickers.forEach(s=>{
 const div=document.createElement('div');
 div.className='sticker';
 div.textContent=s.name;
-div.style.fontSize='36px';
+div.style.fontSize='24px';
 div.style.opacity = coins>=s.cost ? '1':'0.4';
 div.onclick=()=>{
 if(coins>=s.cost){
@@ -262,11 +267,10 @@ unlockedStickers.forEach(s=>{
 const div=document.createElement('div');
 div.className='sticker';
 div.textContent=s.name;
-div.style.fontSize='36px';
+div.style.fontSize='24px';
 panel.appendChild(div);
 });
 }
 </script>
-
 </body>
 </html>
